@@ -1,0 +1,200 @@
+-- Create database
+CREATE DATABASE hms;
+USE hms;
+
+-- ----------------------------
+-- Login table
+-- ----------------------------
+CREATE TABLE login (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(50) NOT NULL,
+    role ENUM('admin','doctor','receptionist','patient') NOT NULL
+);
+
+INSERT INTO login (username, password, role) VALUES
+('admin1','admin123','admin'),
+('doctor1','doc123','doctor'),
+('reception1','rec123','receptionist'),
+('patient1','pat123','patient');
+
+-- ----------------------------
+-- Doctors table
+-- ----------------------------
+CREATE TABLE doctors (
+    doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(50) NOT NULL,
+    phone VARCHAR(15),
+    email VARCHAR(100),
+    address VARCHAR(200),
+    gender VARCHAR(10),
+    dob DATE,
+    blood_group VARCHAR(5),
+    joining_date DATE,
+    specialization VARCHAR(50),
+    clinic_no VARCHAR(10)
+);
+
+-- ----------------------------
+-- Patients table
+-- ----------------------------
+CREATE TABLE patients (
+    patient_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    username VARCHAR(50),
+    password VARCHAR(50),
+    phone VARCHAR(15),
+    email VARCHAR(50),
+    address VARCHAR(100),
+    gender VARCHAR(10),
+    dob DATE,
+    blood_group VARCHAR(5),
+    father_name VARCHAR(50),
+    disease VARCHAR(50),
+    marital_status VARCHAR(20)
+);
+
+-- ----------------------------
+-- Receptionists table
+-- ----------------------------
+CREATE TABLE receptionists (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    username VARCHAR(50),
+    password VARCHAR(50),
+    phone VARCHAR(15),
+    email VARCHAR(50),
+    address VARCHAR(100),
+    gender VARCHAR(10),
+    dob DATE,
+    blood_group VARCHAR(5),
+    joining_date DATE,
+    qualification VARCHAR(50),
+    marital_status VARCHAR(20)
+);
+
+-- ----------------------------
+-- Appointment table
+-- ----------------------------
+CREATE TABLE appointment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,          -- Patient full name
+    email VARCHAR(100) NOT NULL,
+    fathername VARCHAR(100),
+    phoneno VARCHAR(20) NOT NULL,
+    marital_status VARCHAR(20),
+    gender VARCHAR(10),
+    bloodgroup VARCHAR(5),
+    dob DATE,
+    deceased BOOLEAN DEFAULT FALSE,
+    deceased_name VARCHAR(100) NULL,
+    doctor_available VARCHAR(100),       -- Optional display
+    selectdoctor VARCHAR(100),           -- Optional display
+    doctor_id INT NOT NULL,              -- FK to doctors
+    appointmentdate DATE NOT NULL,
+    appointmenttime TIME NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending',
+    CONSTRAINT fk_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE
+);
+
+-- --Room 
+CREATE TABLE rooms (
+    room_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_no VARCHAR(10) NOT NULL UNIQUE,
+    room_type ENUM('General','Private','Operation Theater','ICU') NOT NULL,
+    floor INT NOT NULL,
+    booked BOOLEAN DEFAULT FALSE
+);
+ALTER TABLE patients
+ADD CONSTRAINT unique_username UNIQUE (username);
+CREATE TABLE room_booking (
+    booking_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_username VARCHAR(50) NOT NULL,
+    name VARCHAR(50),
+    email VARCHAR(50),
+    room_no VARCHAR(10) NOT NULL,
+    room_type ENUM('General','Private','Operation Theater','ICU') NOT NULL,
+    booking_date DATE NOT NULL,
+    FOREIGN KEY (patient_username) REFERENCES patients(username)
+);
+
+-- Insert 10 General rooms (Floor 1-2)
+INSERT INTO rooms (room_no, room_type, floor, booked) VALUES
+('G101','General',1,FALSE),
+('G102','General',1,FALSE),
+('G103','General',1,FALSE),
+('G104','General',1,FALSE),
+('G105','General',1,FALSE),
+('G106','General',2,FALSE),
+('G107','General',2,FALSE),
+('G108','General',2,FALSE),
+('G109','General',2,FALSE),
+('G110','General',2,FALSE);
+
+-- Insert 10 Private rooms (Floor 3-4)
+INSERT INTO rooms (room_no, room_type, floor, booked) VALUES
+('P301','Private',3,FALSE),
+('P302','Private',3,FALSE),
+('P303','Private',3,FALSE),
+('P304','Private',3,FALSE),
+('P305','Private',3,FALSE),
+('P306','Private',4,FALSE),
+('P307','Private',4,FALSE),
+('P308','Private',4,FALSE),
+('P309','Private',4,FALSE),
+('P310','Private',4,FALSE);
+
+-- Insert 5 Operation Theater rooms (Floor 5)
+INSERT INTO rooms (room_no, room_type, floor, booked) VALUES
+('OT501','Operation Theater',5,FALSE),
+('OT502','Operation Theater',5,FALSE),
+('OT503','Operation Theater',5,FALSE),
+('OT504','Operation Theater',5,FALSE),
+('OT505','Operation Theater',5,FALSE);
+
+-- Insert 10 ICU rooms (Floor 6)
+INSERT INTO rooms (room_no, room_type, floor, booked) VALUES
+('IC601','ICU',6,FALSE),
+('IC602','ICU',6,FALSE),
+('IC603','ICU',6,FALSE),
+('IC604','ICU',6,FALSE),
+('IC605','ICU',6,FALSE),
+('IC606','ICU',6,FALSE),
+('IC607','ICU',6,FALSE),
+('IC608','ICU',6,FALSE),
+('IC609','ICU',6,FALSE),
+('IC610','ICU',6,FALSE);
+
+-- for billing
+
+CREATE TABLE billing (
+    bill_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_username VARCHAR(50) NOT NULL,
+    appointment_fee INT NOT NULL DEFAULT 500,
+    room_charge INT NOT NULL DEFAULT 0,
+    total INT NOT NULL DEFAULT 500,
+    billing_date DATE NOT NULL,
+    FOREIGN KEY (patient_username) REFERENCES patients(username)
+);
+ALTER TABLE billing
+ADD COLUMN paid BOOLEAN DEFAULT FALSE;
+ALTER TABLE billing
+ADD COLUMN paid_amount INT NOT NULL DEFAULT 0;
+
+ALTER TABLE patients 
+ADD COLUMN status VARCHAR(20) DEFAULT 'Discharged';
+UPDATE patients
+SET status = 'Discharged'
+WHERE patient_id > 0;
+
+ALTER TABLE room_booking
+ADD COLUMN status VARCHAR(20) DEFAULT 'Active';
+----------------------------
+-- Test selects
+-- ----------------------------
+SELECT * FROM patients;
+SELECT * FROM doctors;
+SELECT * FROM receptionists;
+SELECT name, doctor_id FROM doctors WHERE doctor_id = 1;
